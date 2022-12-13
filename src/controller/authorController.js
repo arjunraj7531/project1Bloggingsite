@@ -4,13 +4,13 @@ const { isValid } = require("../validator/validation");
 
 //============================ 1st post API for create author ===================================
 
-const creatAuthor = async function (req, res) {
+const creatAuthor = async function(req, res) {
     try {
         let data = req.body;
-        let {fname , lname, title, email, password} = data;
-        
+        let { fname, lname, title, email, password } = data;
 
-        if (Object.keys(data).length == 0) {
+
+        if (Object.keys(data).length === 0) {
             return res.status(400).send({ status: false, msg: "Body can not empty" })
         }
 
@@ -32,70 +32,51 @@ const creatAuthor = async function (req, res) {
         if (!isValid(email)) {
             return res.status(400).send({ status: false, msg: "email not found" })
         }
-        if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.email.trim()))) {
+        if (!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.email.trim()))) {
             return res.status(400).send({ status: false, msg: "email is invalid" })
         }
         if (!isValid(password)) {
             return res.status(400).send({ status: false, msg: "password not found" })
         }
-        if(!(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/
-        .test(data.password.trim()))) {
+        if (!(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/
+                .test(data.password.trim()))) {
             return res.status(400).send({ status: false, msg: "password is invalid" })
         }
-        
-        let savedData = await authorModel.create(data)
-        res.status(201).send({ status: true, msg:"new author is created", data: savedData })
-    }
 
-    catch (error) {
+        let savedData = await authorModel.create(data)
+        res.status(201).send({ status: true, msg: "new Author is created", data: savedData })
+            //console.log(savedData)
+
+    } catch (error) {
         res.status(500).send({ msg: "not working" })
     }
 };
 
 //===================================== 7th-LOGIN API ====================================================//
 
-const loginAuthor = async function (req, res) {
+const loginAuthor = async function(req, res) {
 
     try {
-        let data = req.body
-        let userName = req.body.email;
-        let password = req.body.password;
+        const { email, password } = req.body
 
-        if (Object.keys(data).length == 0) {
-            return res.status(400).send({ status: false, msg: "Please provide userName and passowrd" })
-        }
-    
-        if (!isValid(userName)) {
-            return res.status(400).send({ status: false, msg: "email not found" })
-        }
-        if (!isValid(password)) {
-            return res.status(400).send({ status: false, msg: "password not found" })
+        if (!email || !password) {
+            return res.status(400).send({ status: false, message: "Mail id or password is required" })
         }
 
-        let confirmData = await authorModel.findOne({ email: userName, password: password });
-        if (!confirmData) {
-            return res.status(404).send({ status: false, msg: "username or password is not found" });
-        }
-        
+        const userData = await authorModel.findOne({ email: email, password: password })
+        if (!userData) return res.status(400).send({ status: false, message: "incorrect email or password" })
 
-        let token = jwt.sign(
-            {
-                userId: userName._id,
-                batch: "lithium",
-                project: "project1",
-            },
-            "functionup"
-        );
-        res.setHeader("x-api-key", token);
-        res.status(200).send({ status: true, data: token });
+        const token = jwt.sign({ userId: userData._id.toString() }, "functionup")
+
+        res.setHeader("x-api-key", token),
+            res.status(200).send({ status: true, data: token });
+
+        return res.status(200).send({ status: true, message: "succesfull logged in", token: token })
+    } catch (error) {
+        return res.status(500).send({ status: false, message: error.message })
     }
-    catch (error) {
-        res.status(500).send({ msg: error })
-        console.log({ msg: error })
-    }
-};
+}
 
 
-module.exports.loginAuthor = loginAuthor
-module.exports.creatAuthor = creatAuthor
 
+module.exports = { loginAuthor, creatAuthor }
