@@ -1,1 +1,1 @@
-# project1Bloggingsite
+# Project1-Blogging-site-mini
