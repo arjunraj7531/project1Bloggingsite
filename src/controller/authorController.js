@@ -4,12 +4,14 @@ const { isValid } = require("../validator/validation");
 
 //============================ 1st post API for create author ===================================
 
-const creatAuthor = async function(req, res) {
+const creatAuthor = async function (req, res) {
     try {
         let data = req.body;
         let { fname, lname, title, email, password } = data;
 
-
+       if(!data){
+        return res.status(400).send({ status: false, msg: "Body can not empty" })
+       }
         if (Object.keys(data).length === 0) {
             return res.status(400).send({ status: false, msg: "Body can not empty" })
         }
@@ -39,13 +41,13 @@ const creatAuthor = async function(req, res) {
             return res.status(400).send({ status: false, msg: "password not found" })
         }
         if (!(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/
-                .test(data.password.trim()))) {
+            .test(data.password.trim()))) {
             return res.status(400).send({ status: false, msg: "password is invalid" })
         }
 
         let savedData = await authorModel.create(data)
         res.status(201).send({ status: true, msg: "new Author is created", data: savedData })
-            //console.log(savedData)
+        //console.log(savedData)
 
     } catch (error) {
         res.status(500).send({ msg: "not working" })
@@ -54,7 +56,7 @@ const creatAuthor = async function(req, res) {
 
 //===================================== 7th-LOGIN API ====================================================//
 
-const loginAuthor = async function(req, res) {
+const loginAuthor = async function (req, res) {
 
     try {
         const { email, password } = req.body
@@ -63,13 +65,12 @@ const loginAuthor = async function(req, res) {
             return res.status(400).send({ status: false, message: "Mail id or password is required" })
         }
 
-        const userData = await authorModel.findOne({ email: email, password: password })
-        if (!userData) return res.status(400).send({ status: false, message: "incorrect email or password" })
+        const authorData = await authorModel.findOne({ email: email, password: password })
+        if (!authorData) return res.status(400).send({ status: false, message: "incorrect email or password" })
 
-        const token = jwt.sign({ userId: userData._id.toString() }, "functionup")
-
+        const token = jwt.sign({ authorId: authorData._id.toString() }, "functionup")
         res.setHeader("x-api-key", token),
-            res.status(200).send({ status: true, data: token });
+        res.status(200).send({ status: true, data: token });
 
         return res.status(200).send({ status: true, message: "succesfull logged in", token: token })
     } catch (error) {
